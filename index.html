@@ -17,16 +17,15 @@
     html, body {
       margin: 0;
       padding: 0;
-      height: 100%;
-      overflow: hidden;          /* Evita desplazamiento */
       font-family: Roboto, sans-serif;
       background: #fff8f7;
       -webkit-user-select: none;
       user-select: none;
+      overflow: hidden;  /* evita scroll */
     }
 
     .calculator {
-      height: 100%;              /* Calculadora ocupa todo el alto */
+      margin-top: var(--btn-size);  /* desplaza la calculadora hacia abajo */
       display: flex;
       flex-direction: column;
       box-sizing: border-box;
@@ -58,10 +57,9 @@
     }
 
     .buttons {
-      flex: 1;                               /* Ocupa todo el espacio sobrante */
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      grid-auto-rows: 1fr;                   /* Filas se ajustan automáticamente */
+      grid-auto-rows: var(--btn-size);   /* filas fijas */
       gap: var(--gap);
       padding: var(--gap);
       background: #fff8f7;
@@ -72,7 +70,7 @@
       border: none;
       border-radius: 50%;
       font-size: 7.1vw;
-      font-weight: bold;                     /* Botones en negrita */
+      font-weight: bold;   /* negrita */
       width: 100%;
       aspect-ratio: 1 / 1;
       background: #fbd9d7;
