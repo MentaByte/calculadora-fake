@@ -1,20 +1,24 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <link rel="manifest" href="manifest.json">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Calculadora Android Fake</title>
+
+  <!-- Manifest para pseudo app -->
+  <link rel="manifest" href="manifest.json">
+
   <style>
     :root{
       --btn-size: 23.8vw;
       --gap: 1.1vw;
     }
 
-    body {
+    html, body {
       margin: 0;
-      height: 100vh;
-      box-sizing: border-box;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;          /* Evita desplazamiento */
       font-family: Roboto, sans-serif;
       background: #fff8f7;
       -webkit-user-select: none;
@@ -22,14 +26,13 @@
     }
 
     .calculator {
-      height: 100vh;
+      height: 100%;              /* Calculadora ocupa todo el alto */
       display: flex;
       flex-direction: column;
       box-sizing: border-box;
     }
 
     .display {
-      height: calc(var(--btn-size) + 2vw);
       padding: 2vw;
       display: flex;
       flex-direction: column;
@@ -55,13 +58,13 @@
     }
 
     .buttons {
+      flex: 1;                               /* Ocupa todo el espacio sobrante */
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      grid-auto-rows: var(--btn-size);
+      grid-auto-rows: 1fr;                   /* Filas se ajustan automáticamente */
       gap: var(--gap);
       padding: var(--gap);
       background: #fff8f7;
-      flex: 1;
       box-sizing: border-box;
     }
 
@@ -69,8 +72,8 @@
       border: none;
       border-radius: 50%;
       font-size: 7.1vw;
-      font-weight: bold;
-      width: var(--btn-size);
+      font-weight: bold;                     /* Botones en negrita */
+      width: 100%;
       aspect-ratio: 1 / 1;
       background: #fbd9d7;
       color: #000;
@@ -147,7 +150,6 @@
     let forced = null;
     let partialVisible = false;
 
-    // 🔹 Nuevas variables para restaurar estado completo
     let lastOperation = "";
     let lastPartialVisible = false;
     let lastResultText = "";
@@ -214,7 +216,6 @@
       if (trapLocked) return;
 
       if (justCalculated) {
-        // 🔹 Restaurar operación, estado del parcial y resultado
         currentOperation = lastOperation;
         partialVisible = lastPartialVisible;
         result.textContent = lastResultText;
@@ -260,7 +261,6 @@
       try {
         let calcResult = eval(currentOperation);
 
-        // 🔹 Guardar estado antes de sobrescribir
         lastOperation = currentOperation;
         lastPartialVisible = partialVisible;
         lastResultText = result.textContent;
