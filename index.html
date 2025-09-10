@@ -32,13 +32,15 @@
     }
 
     .display {
+      position: relative;
+      width: 100%;
       padding: 2vw;
+      box-sizing: border-box;
+      min-height: calc(var(--btn-size) * 2); /* espacio para operación + resultado */
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
       align-items: flex-end;
-      box-sizing: border-box;
-      overflow: hidden;
     }
 
     .operation {
@@ -50,12 +52,13 @@
     }
 
     .result {
+      position: absolute;   /* NO desplaza los botones */
+      bottom: 0;
+      right: 2vw;           /* igual que padding */
       font-size: 6.9vw;
       color: #6b5f00;
-      margin-top: 1vw;
       line-height: 1;
     }
-
     .buttons {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
