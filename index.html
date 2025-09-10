@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Calculadora Android Fake</title>
+  <style>
+    :root{
+      --btn-size: 23.8vw;
+      --gap: 1.1vw;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      padding-top: var(--btn-size);
+      box-sizing: border-box;
+      font-family: Roboto, sans-serif;
+      background: #fff8f7;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .calculator {
+      height: calc(100vh - var(--btn-size));
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+    }
+
+    .display {
+      height: calc(var(--btn-size) + 2vw);
+      padding: 2vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-end;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .operation {
+      font-size: 13.1vw;
+      color: #000;
+      word-wrap: break-word;
+      text-align: right;
+      line-height: 1;
+    }
+
+    .result {
+      font-size: 6.9vw;
+      color: #6b5f00;
+      margin-top: 1vw;
+      line-height: 1;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-auto-rows: var(--btn-size);
+      gap: var(--gap);
+      padding: var(--gap);
+      background: #fff8f7;
+      flex: 1;
+      box-sizing: border-box;
+    }
+
+    button {
+      border: none;
+      border-radius: 50%;
+      font-size: 7.1vw;
+      width: var(--btn-size);
+      aspect-ratio: 1 / 1;
+      background: #fbd9d7;
+      color: #000;
+      cursor: pointer;
+      transition: background 0.05s, transform 0.03s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
+      box-sizing: border-box;
+      justify-self: center;
+      align-self: center;
+    }
+
+    button:active {
+      background: #fcb3b0;
+      transform: scale(0.97);
+    }
+
+    button.special { background: #f9b9b6; }
+    button.special:active { background: #f49490; }
+
+    .equal {
+      background: #6b5f00;
+      color: #fff;
+    }
+    .equal:active { background: #8a7a00; }
+
+    html, body { -ms-touch-action: manipulation; touch-action: manipulation; }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <div class="display">
+      <div class="operation" id="operation">0</div>
+      <div class="result" id="result"></div>
+    </div>
+
+    <div class="buttons">
+      <button class="special" onclick="clearDisplay()">AC</button>
+      <button class="special" onclick="forceNumber()">()</button>
+      <button class="special" onclick="noop()">%</button>
+      <button class="special" onclick="noop()">÷</button>
+
+      <button onclick="appendNumber(7)">7</button>
+      <button onclick="appendNumber(8)">8</button>
+      <button onclick="appendNumber(9)">9</button>
+      <button class="special" onclick="noop()">×</button>
+
+      <button onclick="appendNumber(4)">4</button>
+      <button onclick="appendNumber(5)">5</button>
+      <button onclick="appendNumber(6)">6</button>
+      <button class="special" onclick="activateTrap()">-</button>
+
+      <button onclick="appendNumber(1)">1</button>
+      <button onclick="appendNumber(2)">2</button>
+      <button onclick="appendNumber(3)">3</button>
+      <button class="special" onclick="add()">+</button>
+
+      <button onclick="appendNumber(0)">0</button>
+      <button onclick="appendDot()">.</button>
+      <button onclick="backspace()">⌫</button>
+      <button class="equal" onclick="calculate()">=</button>
+    </div>
+  </div>
+
+  <script>
+    let operation = document.getElementById("operation");
+    let result = document.getElementById("result");
+    let currentOperation = "";
+    let trapMode = false;
+    let trapLocked = false;
+    let forced = null;
+    let partialVisible = false;
+
+    // 🔹 Nuevas variables para restaurar estado completo
+    let lastOperation = "";
+    let lastPartialVisible = false;
+    let lastResultText = "";
+    let justCalculated = false;
+
+    function updateDisplay() {
+      operation.textContent = currentOperation || "0";
+      if (!partialVisible) {
+        result.textContent = "";
+        return;
+      }
+      try {
+        let expr = currentOperation.replace(/[+\-×÷.]$/, "");
+        let calcResult = eval(expr);
+        if (!isNaN(calcResult)) {
+          result.textContent = Number(calcResult).toLocaleString("es-CO");
+        } else {
+          result.textContent = "";
+        }
+      } catch {
+        result.textContent = "";
+      }
+    }
+
+    function appendNumber(num) {
+      if (trapLocked) return;
+      if (trapMode) {
+        showTrapResult();
+        return;
+      }
+      let prevChar = currentOperation.slice(-1);
+      currentOperation += num;
+      if (prevChar === '+' && !partialVisible) {
+        partialVisible = true;
+      }
+      justCalculated = false;
+      updateDisplay();
+    }
+
+    function appendDot() {
+      if (trapLocked) return;
+      currentOperation += ".";
+      justCalculated = false;
+      updateDisplay();
+    }
+
+    function add() {
+      if (trapLocked) return;
+      currentOperation += "+";
+      justCalculated = false;
+      updateDisplay();
+    }
+
+    function clearDisplay() {
+      if (trapLocked) return;
+      currentOperation = "";
+      result.textContent = "";
+      partialVisible = false;
+      justCalculated = false;
+      updateDisplay();
+    }
+
+    function backspace() {
+      if (trapLocked) return;
+
+      if (justCalculated) {
+        // 🔹 Restaurar operación, estado del parcial y resultado
+        currentOperation = lastOperation;
+        partialVisible = lastPartialVisible;
+        result.textContent = lastResultText;
+        justCalculated = false;
+        updateDisplay();
+        return;
+      }
+
+      currentOperation = currentOperation.slice(0, -1);
+      updateDisplay();
+    }
+
+    function forceNumber() {
+      let num = prompt("Número a forzar (solo dígitos):");
+      if (num !== null && /^\d+(\.\d+)?$/.test(num)) {
+        forced = parseFloat(num);
+      } else if (num !== null) {
+        alert("Por favor ingresa solo números válidos");
+      }
+    }
+
+    function activateTrap() {
+      if (trapLocked) return;
+      trapMode = true;
+      currentOperation += "+";
+      justCalculated = false;
+      updateDisplay();
+    }
+
+    function showTrapResult() {
+      let actual = eval(currentOperation.replace(/\+$/, "")) || 0;
+      if (forced !== null) {
+        let needed = forced - actual;
+        currentOperation += needed;
+        updateDisplay();
+        trapLocked = true;
+      } else {
+        result.textContent = "⚠ No forzado";
+      }
+    }
+
+    function calculate() {
+      try {
+        let calcResult = eval(currentOperation);
+
+        // 🔹 Guardar estado antes de sobrescribir
+        lastOperation = currentOperation;
+        lastPartialVisible = partialVisible;
+        lastResultText = result.textContent;
+
+        if (trapMode) {
+          operation.textContent = forced;
+          result.textContent = "";
+          currentOperation = forced.toString();
+        } else {
+          result.textContent = Number(calcResult).toLocaleString("es-CO");
+          operation.textContent = result.textContent;
+          currentOperation = calcResult.toString();
+        }
+
+        trapMode = false;
+        trapLocked = false;
+        partialVisible = false;
+        justCalculated = true;
+        updateDisplay();
+      } catch {
+        result.textContent = "Error";
+      }
+    }
+
+    function noop() {}
+  </script>
+</body>
+</html>
